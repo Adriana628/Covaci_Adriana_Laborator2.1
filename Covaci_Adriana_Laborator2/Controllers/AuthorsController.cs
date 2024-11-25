@@ -23,7 +23,7 @@ namespace Covaci_Adriana_Laborator2.Controllers
         public async Task<IActionResult> Index()
         {
             var authors = await _context.Author
-        .Include(a => a.Books) // Încarcă și cărțile asociate
+        //.Include(a => a.Books) // Încarcă și cărțile asociate
         .ToListAsync();
             return View("~/Views/Authors/Index.cshtml", authors);
         }

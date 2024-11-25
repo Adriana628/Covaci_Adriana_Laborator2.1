@@ -13,7 +13,7 @@
         <tr>
             <th>First Name</th>
             <th>Last Name</th>
-            <th>Books</th>
+            @* <th>Books</th> *@
             <th>Actions</th>
         </tr>
     </thead>
@@ -23,19 +23,19 @@
             <tr>
                 <td>@author.FirstName</td>
                 <td>@author.LastName</td>
-                <td>
-                    @if (author.Books != null && author.Books.Any())
-                    {
-                        @foreach (var book in author.Books)
-                        {
-                            <div>@book.Title</div>
-                        }
-                    }
-                    else
-                    {
-                        <span>No books</span>
-                    }
-                </td>
+                @* <td> *@
+                @*     @if (author.Books != null && author.Books.Any()) *@
+                @*     { *@
+                @*         @foreach (var book in author.Books) *@
+                @*         { *@
+                @*             <div>@book.Title</div> *@
+                @*         } *@
+                @*     } *@
+                @*     else *@
+                @*     { *@
+                @*         <span>No books</span> *@
+                @*     } *@
+                @* </td> *@
                 <td>
                     <a asp-controller="Authors" asp-action="Edit" asp-route-id="@author.ID">Edit</a> |
                     <a asp-controller="Authors" asp-action="Details" asp-route-id="@author.ID">Details</a> |

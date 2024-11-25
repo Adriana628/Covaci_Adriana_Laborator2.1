@@ -46,10 +46,10 @@ namespace Covaci_Adriana_Laborator2.Controllers
                 return NotFound();
             }
 
-            var book = await _context.Book
-                .Include(b => b.Genre)
-                .Include(b => b.Author)
-                .FirstOrDefaultAsync(m => m.ID == id);
+            var book = await _context.Book.Include(s => s.Orders)
+             .ThenInclude(e => e.Customer)
+              .AsNoTracking()
+             .FirstOrDefaultAsync(m => m.ID == id);
             if (book == null)
             {
                 return NotFound();
