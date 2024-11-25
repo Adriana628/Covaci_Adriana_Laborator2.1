@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Covaci_Adriana_Laborator2.Data;
 using Covaci_Adriana_Laborator2.Models;
+using Microsoft.Data.SqlClient;
 
 namespace Covaci_Adriana_Laborator2.Controllers
 {
@@ -32,10 +33,43 @@ namespace Covaci_Adriana_Laborator2.Controllers
         }
 
         // GET: Books
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string sortOrder, string searchString)
         {
-            var libraryContext = _context.Book.Include(b => b.Genre).Include(b => b.Author);
-            return View(await libraryContext.ToListAsync());
+            ViewData["TitleSortParm"] = String.IsNullOrEmpty(sortOrder) ? "title_desc" : "";
+            ViewData["PriceSortParm"] = sortOrder == "Price" ? "price_desc" : "Price";
+            ViewData["CurrentFilter"] = searchString;
+            var books = from b in _context.Book
+                        join a in _context.Author on b.AuthorID equals a.ID
+                        select new BookViewModel
+                        {
+                            ID = b.ID,
+                            Title = b.Title,
+                            Price = b.Price,
+                            FullName = a.FullName
+                        };
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                books = books.Where(s => s.Title.Contains(searchString));
+            }
+            switch (sortOrder)
+            {
+                case "title_desc":
+                    books = books.OrderByDescending(b => b.Title);
+                    break;
+                case "Price":
+                    books = books.OrderBy(b => b.Price);
+                    break;
+                case "price_desc":
+                    books = books.OrderByDescending(b => b.Price);
+                    break;
+                default:
+                    books = books.OrderBy(b => b.Title);
+                    break;
+            }
+            return View(await books.AsNoTracking().ToListAsync());
+
+            //var libraryContext = _context.Book.Include(b => b.Genre).Include(b => b.Author);
+            //return View(await libraryContext.ToListAsync());
         }
 
         // GET: Books/Details/5
@@ -46,7 +80,7 @@ namespace Covaci_Adriana_Laborator2.Controllers
                 return NotFound();
             }
 
-            var book = await _context.Book.Include(s => s.Orders)
+            var book = await _context.Book.Include(b =>b.Author). Include(s => s.Orders)
              .ThenInclude(e => e.Customer)
               .AsNoTracking()
              .FirstOrDefaultAsync(m => m.ID == id);
@@ -61,25 +95,33 @@ namespace Covaci_Adriana_Laborator2.Controllers
         // GET: Books/Create
         public IActionResult Create()
         {
-            ViewData["GenreID"] = new SelectList(_context.Genre, "ID", "Name"); // Populează genurile
-            PopulateAuthorsDropDownList();  // Folosește metoda pentru a popula autorii
+            ViewData["GenreID"] = new SelectList(_context.Genre, "ID", "Name"); 
+            PopulateAuthorsDropDownList();  
             return View();
         }
 
         // POST: Books/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Title,AuthorID,Price,GenreID")] Book book)
+        public async Task<IActionResult> Create([Bind("Title,AuthorID,Price,GenreID")] Book book)
         {
-            if (ModelState.IsValid)
+            try
             {
-                _context.Add(book);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                if (ModelState.IsValid)
+                {
+                    _context.Add(book);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
             }
+            catch(DbUpdateException/* ex*/)
+            {
 
-            // Re-populează dropdown-urile dacă validarea eșuează
-            ViewData["GenreID"] = new SelectList(_context.Genre, "ID", "Name", book.GenreID);
+                ModelState.AddModelError("", "Unable to save changes. " +
+                "Try again, and if the problem persists ");
+            }
+           
+           ViewData["GenreID"] = new SelectList(_context.Genre, "ID", "Name", book.GenreID);
             PopulateAuthorsDropDownList(book.AuthorID);
             return View(book);
         }
@@ -99,8 +141,8 @@ namespace Covaci_Adriana_Laborator2.Controllers
                 return NotFound();
             }
 
-            ViewData["GenreID"] = new SelectList(_context.Genre, "ID", "Name", book.GenreID); // Populează genurile
-            PopulateAuthorsDropDownList(book.AuthorID); // Populează autorii
+            ViewData["GenreID"] = new SelectList(_context.Genre, "ID", "Name", book.GenreID); 
+            PopulateAuthorsDropDownList(book.AuthorID); 
             return View(book);
         }
 
@@ -114,6 +156,22 @@ namespace Covaci_Adriana_Laborator2.Controllers
                 return NotFound();
             }
 
+            var bookToUpdate = await _context.Book.FirstOrDefaultAsync(s => s.ID == id);
+            if (await TryUpdateModelAsync<Book>(
+            bookToUpdate,
+            "", s => s.AuthorID, s => s.Title, s => s.Price))
+            {
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException /* ex */)
+                {
+                    ModelState.AddModelError("", "Unable to save changes. " +
+                    "Try again, and if the problem persists");
+                }
+            }
             if (ModelState.IsValid)
             {
                 try
@@ -134,16 +192,19 @@ namespace Covaci_Adriana_Laborator2.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-
-            // Re-populează dropdown-urile dacă validarea eșuează
+            
+            
             ViewData["GenreID"] = new SelectList(_context.Genre, "ID", "Name", book.GenreID);
-            PopulateAuthorsDropDownList(book.AuthorID);
-            return View(book);
+            //PopulateAuthorsDropDownList(book.AuthorID);
+            //return View(book);
+            ViewData["AuthorID"] = new SelectList(_context.Author, "ID", "FullName",
+            bookToUpdate.AuthorID);
+            return View(bookToUpdate);
         }
 
 
         // GET: Books/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int? id, bool? saveChangesError = false)
         {
             if (id == null)
             {
@@ -152,13 +213,18 @@ namespace Covaci_Adriana_Laborator2.Controllers
 
             var book = await _context.Book
                 .Include(b => b.Genre)
-                .Include(b => b.Author)  // Corectare aici: includem Author, nu AuthorID
+                .Include(b => b.Author)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.ID == id);
             if (book == null)
             {
                 return NotFound();
             }
-
+            if (saveChangesError.GetValueOrDefault())
+            {
+                ViewData["ErrorMessage"] =
+                "Delete failed. Try again";
+            }
             return View(book);
         }
 
@@ -168,13 +234,25 @@ namespace Covaci_Adriana_Laborator2.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var book = await _context.Book.FindAsync(id);
-            if (book != null)
+            //if (book != null)
+            //{
+            //    _context.Book.Remove(book);
+            //}
+            if (book == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            try
             {
                 _context.Book.Remove(book);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
+            catch (DbUpdateException /* ex */)
+            {
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Delete), new { id = id, saveChangesError = true });
+            }
         }
 
         private bool BookExists(int id)

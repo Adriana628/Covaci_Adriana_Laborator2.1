@@ -1,35 +1,51 @@
-﻿@model IEnumerable<Covaci_Adriana_Laborator2.Models.Book>
+﻿@model IEnumerable<Covaci_Adriana_Laborator2.Models.BookViewModel>
 
 @{
-    ViewData["Title"] = "Books Index";
+    ViewData["Title"] = "Index";
 }
-
+<h1>Index</h1>
 <p>
-    <a asp-controller="Books" asp-action="Create">Create New</a>
+    <a  asp-action="Create">Create New</a>
 </p>
-
+<form asp-action="Index" method="get">
+    <div class="form-actions no-color">
+        <p>
+            Find by title: <input type="text" name="SearchString" value="@ViewData["CurrentFilter"]" />
+            <input type="submit" value="Search" class="btn btn-default" /> |
+            <a asp-action="Index">Back to Full List</a>
+        </p>
+    </div>
+</form>
 <table class="table">
     <thead>
         <tr>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Price</th>
-            <th>Genre</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Title</td>
-                <td>@(item.Author != null ? item.Author.FirstName + " " + item.Author.LastName : "No author")</td>
-                <td>@item.Price</td>
-                <td>@(item.Genre != null ? item.Genre.Name : "No genre")</td>
+ <th>
+ <a asp-action="Index" asp-route-sortOrder="@ViewData["TitleSortParm"]">@Html.DisplayNameFor(model => model.Title)</a>
+ </th>
+    <th>@Html.DisplayNameFor(model => model.FullName)
+ </th>
+ <th>
+ <a asp-action="Index" asp-route-sortOrder="@ViewData["PriceSortParm"]">@Html.DisplayNameFor(model => model.Price)</a>
+ </th>
+ <th></th>
+ </tr>
+ </thead>
+ <tbody>
+@foreach (var item in Model) {
+ <tr>
+ <td>
+ @Html.DisplayFor(modelItem => item.Title)
+ </td>
+ <td>
+ @Html.DisplayFor(modelItem => item.FullName)
+ </td>
+ <td>
+ @Html.DisplayFor(modelItem => item.Price)
+                </td>
                 <td>
-                    <a asp-controller="Books" asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
-                    <a asp-controller="Books" asp-action="Details" asp-route-id="@item.ID">Details</a> |
-                    <a asp-controller="Books" asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
                 </td>
             </tr>
         }

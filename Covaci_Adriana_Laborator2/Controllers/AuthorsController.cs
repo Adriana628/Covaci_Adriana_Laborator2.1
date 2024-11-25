@@ -37,6 +37,7 @@ namespace Covaci_Adriana_Laborator2.Controllers
             }
 
             var authors = await _context.Author
+                .Include(a=>a.Books)
                 .FirstOrDefaultAsync(m => m.ID == id);
             if (authors == null)
             {
@@ -57,7 +58,7 @@ namespace Covaci_Adriana_Laborator2.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Name")] Author authors)
+        public async Task<IActionResult> Create([Bind("FirstName, LastName")] Author authors)
         {
             if (ModelState.IsValid)
             {
