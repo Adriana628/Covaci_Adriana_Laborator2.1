@@ -23,11 +23,16 @@ namespace Covaci_Adriana_Laborator2.Controllers
         public async Task<IActionResult> Index(int? id, int? bookID)
         {
             var viewModel = new PublisherIndexData();
-            viewModel.Publishers = await _context.Publisher.Include(i => i.PublishedBooks).ThenInclude(i => i.Book).ThenInclude(i => i.Orders)
-            .ThenInclude(i => i.Customer)
-            .AsNoTracking()
-            .OrderBy(i => i.PublisherName)
-            .ToListAsync();
+            viewModel.Publishers = await _context.Publisher.Include(i => i.PublishedBooks)
+                                                            .ThenInclude(i => i.Book)
+                                                            .ThenInclude(b => b.Author) // Adăugăm relația cu autorul
+                                                            .Include(i => i.PublishedBooks)
+                                                             .ThenInclude(i => i.Book)
+                                                            .ThenInclude(b => b.Orders)
+                                                            .ThenInclude(o => o.Customer)
+    .AsNoTracking()
+    .OrderBy(i => i.PublisherName)
+    .ToListAsync();
             if (id != null)
             {
                 ViewData["PublisherID"] = id.Value;
