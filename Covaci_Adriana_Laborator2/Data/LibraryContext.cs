@@ -11,6 +11,10 @@ namespace Covaci_Adriana_Laborator2.Data
         public DbSet<Author> Author { get; set; }
         public DbSet<Genre> Genre { get; set; }
 
+        public DbSet<Covaci_Adriana_Laborator2.Models.Order> Order { get; set; } = default;
+
+        //public DbSet<Covaci_Adriana_Laborator2.Models.Customer> Customer { get; set; } = default;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configurare relație 1-N între Author și Book

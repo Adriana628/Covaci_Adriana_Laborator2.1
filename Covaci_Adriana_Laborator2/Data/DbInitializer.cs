@@ -41,6 +41,23 @@ namespace Covaci_Adriana_Laborator2.Data
                 };
                 context.Book.AddRange(books);
 
+
+
+                //Comenzi
+                //               var orders = new Order[]
+                //{
+                //                 new Order { BookID = 1, CustomerID = 1, OrderDate = DateTime.Parse("2024-11-12") },
+                //                 new Order { BookID = 2, CustomerID = 2, OrderDate = DateTime.Parse("2024-11-22") },
+                //                 new Order { BookID = 3, CustomerID = 1, OrderDate = DateTime.Parse("2024-12-01") }
+                //}; context.Order.AddRange(orders);
+
+               // var customers = new[]
+               //{
+               //     new Customer { Name = "Popescu Marcela", Adress = "Str. Plopilor 24", BirthDate = DateTime.Parse("1979-09-01") },
+               //     new Customer { Name = "Mihăilescu Cornel", Adress = "Str. București 45", BirthDate = DateTime.Parse("1969-07-08") }
+               // };
+               // context.Customer.AddRange(customers);
+
                 context.SaveChanges();
             }
         }
