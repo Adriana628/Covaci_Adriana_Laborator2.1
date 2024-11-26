@@ -11,6 +11,6 @@ namespace Covaci_Adriana_Laborator2.Models
 
         [StringLength(70)]
         public string Adress { get; set; }
-        public ICollection<PublishedBook> PublishedBooks { get; set; }
+        public ICollection<PublishedBooks>? PublishedBooks { get; set; }
     }
 }

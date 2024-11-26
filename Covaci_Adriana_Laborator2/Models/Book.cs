@@ -23,6 +23,6 @@ namespace Covaci_Adriana_Laborator2.Models
         public Genre? Genre { get; set; }
         public ICollection<Order>? Orders { get; set; }
 
-        public ICollection<PublishedBook> PublishedBooks { get; set; }
+        public ICollection<PublishedBooks> PublishedBooks { get; set; }
     }
 }
